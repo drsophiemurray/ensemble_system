@@ -18,9 +18,17 @@ selection = {"id":"NOAA_1_FULLDISK",
 response = requests.get(scoreboard_data_link, params=selection)
 #print(response.content)
 data = response.json()
+
 data['data']
 data['parameters']
 #get rid of u: encode('ascii', 'ignore') or just str()
+#or:
+#str(data['data'][0][0])
+#or:
+#>>> import json, ast
+#>>> r = {u'name': u'A', u'primary_key': 1}
+#>>> ast.literal_eval(json.dumps(r))
+#{'name': 'A', 'primary_key': 1}
 
 # equivalent of https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data?id=NOAA_1_FULLDISK&time.min=2017-09-05T00:00:00.0&time.max=2017-09-10T00:00:00.0&format=json&options=fields.all
 # fields.all:
