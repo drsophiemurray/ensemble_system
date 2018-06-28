@@ -4,23 +4,44 @@ Just get whatever raw data there is for M and X flares
 -most recent forecast since last run?
 """
 
-fulldisk_forecast_products = [["ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK", "AMOS_v1_FULLDISK",
-                               "BoM_flare1_FULLDISK", "MO_TOT1_FULLDISK", "NOAA_1_FULLDISK", "SIDC_Operator_FULLDISK"]]
+import requests
 
-
-scoreboard_data_link = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data"
-selection = {"id":"NOAA_1_FULLDISK",
+iswa_fulldisk_forecast_products = [["ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
+                                    "AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
+                                    "MO_TOT1_FULLDISK", "NOAA_1_FULLDISK",
+                                    "SIDC_Operator_FULLDISK"]]
+iswa_data_link = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data"
+iswa_selection = {"id":"NOAA_1_FULLDISK",
              "time.min":"2016-09-05T00:00:00.0",
              "time.max":"2016-09-07T00:00:00.0",
              "format":"json",
              "options":"fields.all"}
 #             "parameters":"start_window,end_window,issue_time,M,X"}
-response = requests.get(scoreboard_data_link, params=selection)
-#print(response.content)
-data = response.json()
 
-data['data']
-data['parameters']
+def main():
+    """
+
+    :return:
+    """
+    response = requests.get(scoreboard_data_link, params=selection)
+#    print(response.content)
+    if response.status_code == 200:
+        data = response.json()
+    data['data']
+    data['parameters']
+
+
+
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+#Notes
 #get rid of u: encode('ascii', 'ignore') or just str()
 #or:
 #str(data['data'][0][0])
