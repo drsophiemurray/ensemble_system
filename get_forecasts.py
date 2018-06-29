@@ -47,6 +47,8 @@ def main():
                      "time.max":'2016-09-06T00:11:00.0',
                      "format":"json",
                      "options":"fields.all"}
+#                     "parameters":"start_window,end_window,issue_time,M,X"}
+
         response = requests.get(ISWA_DATA_LINK ,
                                 params=selection)
         if response.status_code == 200:
@@ -140,15 +142,9 @@ if __name__ == '__main__':
 # 25: CPlus_level
 # 26: MPlus_level
 # 27: X_level
+
+#    print(response.content)
 #    data['data']
 #    data['parameters']
 
-#selection = {"id":"NOAA_1_FULLDISK",
-#                  "time.min":"2016-09-05T00:00:00.0",
-#                  "time.max":"2016-09-07T00:00:00.0",
-#                  "format":"json",
-#                  "options":"fields.all"}
-#                  "parameters":"start_window,end_window,issue_time,M,X"}
-
-#        print(response.content)
 
