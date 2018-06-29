@@ -1,34 +1,47 @@
-"""Here I plan to pull in full disk forecasts
+"""
+Here I plan to pull in full disk forecasts
 In ideal world FLARECAST would work, but nope so will use Scoreboard
 Just get whatever raw data there is for M and X flares
 -most recent forecast since last run?
+
+Steps:
+- get current time
+- grab forecasts for each iswa product
+- put in database
+- next codes: average, verify yesterday
 """
 
 import requests
+import datetime
 
-iswa_fulldisk_forecast_products = [["ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
+iswa_fulldisk_forecast_products = {"ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
                                     "AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
                                     "MO_TOT1_FULLDISK", "NOAA_1_FULLDISK",
-                                    "SIDC_Operator_FULLDISK"]]
+                                    "SIDC_Operator_FULLDISK"}
 iswa_data_link = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data"
-iswa_selection = {"id":"NOAA_1_FULLDISK",
-             "time.min":"2016-09-05T00:00:00.0",
-             "time.max":"2016-09-07T00:00:00.0",
-             "format":"json",
-             "options":"fields.all"}
-#             "parameters":"start_window,end_window,issue_time,M,X"}
 
 def main():
     """
-
-    :return:
+    Grabbing the latest forecasts currently available on ISWA and putting them in a pandas database
+    For ISWA, values are in 'data' and descriptions are in 'parameters'. No data is '-1'.
     """
-    response = requests.get(scoreboard_data_link, params=selection)
-#    print(response.content)
-    if response.status_code == 200:
-        data = response.json()
-    data['data']
-    data['parameters']
+    time_now = datetime.datetime.utcnow()
+    time_start = (time_now-datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f')
+    time_end = time_now.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    for product in iswa_fulldisk_forecast_products:
+        selection = {"id":product,
+                     "time.min":time_start,
+                     "time.max":time_end,
+                     "format":"json",
+                     "options":"fields.all"}
+        response = requests.get(iswa_data_link, params=selection)
+        if response.status_code == 200:
+            data = response.json()
+            if data['data']:
+                forecast_time = data['data'][0][0]
+                m_prob = data['data'][0][4] #6 if M_plus --> TODO check which each are and include in code (otherwise -1s)
+                x_prob = data['data'][0][7]
+                print(product,forecast_time,m_prob,x_prob)
 
 
 
@@ -36,6 +49,11 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
 
 
 
@@ -81,7 +99,15 @@ if __name__ == '__main__':
 # 25: CPlus_level
 # 26: MPlus_level
 # 27: X_level
+#    data['data']
+#    data['parameters']
 
+#iswa_selection = {"id":"NOAA_1_FULLDISK",
+#                  "time.min":"2016-09-05T00:00:00.0",
+#                  "time.max":"2016-09-07T00:00:00.0",
+#                  "format":"json",
+#                  "options":"fields.all"}
+#                  "parameters":"start_window,end_window,issue_time,M,X"}
 
-
+#        print(response.content)
 
