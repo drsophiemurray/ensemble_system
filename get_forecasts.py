@@ -18,6 +18,7 @@ Note:
 
 import requests
 import datetime
+import pandas as pd
 
 ISWA_FULLDISK_PRODUCTS = {"ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
                           "AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
@@ -36,6 +37,10 @@ def main():
     #TODO always take midnight? means dropping SIDC
     time_start = (time_now-datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f')
     time_end = time_now.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    # create databases
+    todays_forecast_data = pd.DataFrame(columns = ["product", "time",
+                                                   "m_prob", "x_prob"])
+    yesterdays_forecast_data = todays_forecast_data.copy()
     for product in ISWA_FULLDISK_PRODUCTS:
         #TODO remove hardcoded date when all available and replace with time_start and time_end for realtime
         selection = {"id":product,
@@ -48,9 +53,14 @@ def main():
             data = response.json()
             if data['data']:
                 # first yesterdays forecast for verification
-                get_iswa_forecasts(product, data, day=0)
+                yesterdays_forecast = get_iswa_forecasts(product, data, day=0)
                 # now today for the ensemble forecast
-                get_iswa_forecasts(product, data, day=len(data['data'])-1)
+                todays_forecast = get_iswa_forecasts(product, data, day=len(data['data'])-1)
+                # append to the pandas databases
+                todays_forecast_data = todays_forecast_data.append([todays_forecast], ignore_index=True)
+                yesterdays_forecast_data = yesterdays_forecast_data.append([yesterdays_forecast], ignore_index=True)
+    print(yesterdays_forecast_data)
+    print(todays_forecast_data)
 
 
 def get_iswa_forecasts(product, data, day):
@@ -76,16 +86,13 @@ def get_iswa_forecasts(product, data, day):
         m_prob = data['data'][day][4]
     # x forecast same for 'plus' or 'only'
     x_prob = data['data'][day][7]
-    # at the moment just printing out to test, TODO create a pandas database
-    print(product, forecast_time, m_prob, x_prob)
-    return
-
+    # output results
+    forecast = {"product":product, "time": forecast_time,
+                "m_prob":m_prob, "x_prob":m_prob}
+    return forecast
 
 if __name__ == '__main__':
     main()
-
-
-
 
 
 
