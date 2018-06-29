@@ -47,26 +47,36 @@ def main():
         if response.status_code == 200:
             data = response.json()
             if data['data']:
-                #first yesterdays forecast for verification
+                # first yesterdays forecast for verification
                 get_iswa_forecasts(product, data, day=0)
-                #now today for the ensemble forecast
+                # now today for the ensemble forecast
                 get_iswa_forecasts(product, data, day=len(data['data'])-1)
 
 
 def get_iswa_forecasts(product, data, day):
     """
     Grab M and X forecasts for particular date
+
+    Parameters
+    ----------
     product: The forecast product being grabbed
     data: Forecast data taken from API
     day: Time of interest
-    :return: TODO create a pandas database
+
+    Returns
+    -------
+    forecast: pandas database with forecast probability values
     """
+    # get start of time window rather than issue time
     forecast_time = data['data'][day][0]
+    # get m plus or m only forecasts
     if any(product == forecast for forecast in M_PLUS_FORECASTS):
         m_prob = data['data'][day][6]
     else:
         m_prob = data['data'][day][4]
+    # x forecast same for 'plus' or 'only'
     x_prob = data['data'][day][7]
+    # at the moment just printing out to test, TODO create a pandas database
     print(product, forecast_time, m_prob, x_prob)
     return
 
