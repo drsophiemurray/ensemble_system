@@ -4,7 +4,6 @@ In ideal world FLARECAST would work, but nope so will use Scoreboard
 Just get whatever raw data there is for M and X flares
 -most recent forecast since last run?
 
-
 Steps:
 - get current time
 - grab forecasts for each iswa product
@@ -24,7 +23,7 @@ ISWA_FULLDISK_PRODUCTS = {"ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
                           "AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
                           "MO_TOT1_FULLDISK", "NOAA_1_FULLDISK",
                           "SIDC_Operator_FULLDISK", "UFCORIN_1_FULLDISK"}
-M_PLUS_FORECASTS = ["AMOS_v1_FULLDISK","BoM_flare1_FULLDISK",
+M_PLUS_FORECASTS = ["AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
                     "SIDC_Operator_FULLDISK", "UFCORIN_1_FULLDISK"]
 ISWA_DATA_LINK = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data"
 
@@ -48,17 +47,22 @@ def main():
                      "time.max":'2016-09-06T00:11:00.0',
                      "format":"json",
                      "options":"fields.all"}
-        response = requests.get(ISWA_DATA_LINK , params=selection)
+        response = requests.get(ISWA_DATA_LINK ,
+                                params=selection)
         if response.status_code == 200:
             data = response.json()
             if data['data']:
                 # first yesterdays forecast for verification
-                yesterdays_forecast = get_iswa_forecasts(product, data, day=0)
+                yesterdays_forecast = get_iswa_forecasts(product, data,
+                                                         day=0)
                 # now today for the ensemble forecast
-                todays_forecast = get_iswa_forecasts(product, data, day=len(data['data'])-1)
+                todays_forecast = get_iswa_forecasts(product, data,
+                                                     day=len(data['data'])-1)
                 # append to the pandas databases
-                todays_forecast_data = todays_forecast_data.append([todays_forecast], ignore_index=True)
-                yesterdays_forecast_data = yesterdays_forecast_data.append([yesterdays_forecast], ignore_index=True)
+                todays_forecast_data = todays_forecast_data.append([todays_forecast],
+                                                                   ignore_index=True)
+                yesterdays_forecast_data = yesterdays_forecast_data.append([yesterdays_forecast],
+                                                                           ignore_index=True)
     print(yesterdays_forecast_data)
     print(todays_forecast_data)
 
