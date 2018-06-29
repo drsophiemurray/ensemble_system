@@ -18,6 +18,7 @@ iswa_fulldisk_forecast_products = {"ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
                                     "AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
                                     "MO_TOT1_FULLDISK", "NOAA_1_FULLDISK",
                                     "SIDC_Operator_FULLDISK"}
+m_plus_forecasts = ["AMOS_v1_FULLDISK","BoM_flare1_FULLDISK", "SIDC_Operator_FULLDISK"]
 iswa_data_link = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data"
 
 def main():
@@ -30,8 +31,8 @@ def main():
     time_end = time_now.strftime('%Y-%m-%dT%H:%M:%S.%f')
     for product in iswa_fulldisk_forecast_products:
         selection = {"id":product,
-                     "time.min":time_start,
-                     "time.max":time_end,
+                     "time.min":'2016-09-05T00:00:00.0',
+                     "time.max":'2016-09-07T00:00:00.0',
                      "format":"json",
                      "options":"fields.all"}
         response = requests.get(iswa_data_link, params=selection)
@@ -39,7 +40,10 @@ def main():
             data = response.json()
             if data['data']:
                 forecast_time = data['data'][0][0]
-                m_prob = data['data'][0][4] #6 if M_plus --> TODO check which each are and include in code (otherwise -1s)
+                if any(product==forecast for forecast in m_plus_forecasts):
+                    m_prob = data['data'][0][6]
+                else:
+                    m_prob = data['data'][0][4]
                 x_prob = data['data'][0][7]
                 print(product,forecast_time,m_prob,x_prob)
 
@@ -102,7 +106,7 @@ if __name__ == '__main__':
 #    data['data']
 #    data['parameters']
 
-#iswa_selection = {"id":"NOAA_1_FULLDISK",
+#selection = {"id":"NOAA_1_FULLDISK",
 #                  "time.min":"2016-09-05T00:00:00.0",
 #                  "time.max":"2016-09-07T00:00:00.0",
 #                  "format":"json",
