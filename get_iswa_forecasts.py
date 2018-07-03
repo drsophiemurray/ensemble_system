@@ -55,11 +55,11 @@ def main():
             data = response.json()
             if data['data']:
                 # first yesterdays forecast for verification
-                yesterdays_forecast = get_iswa_forecasts(product, data,
-                                                         day=0)
+                yesterdays_forecast = grab_forecasts(product, data,
+                                                     day=0)
                 # now today for the ensemble forecast
-                todays_forecast = get_iswa_forecasts(product, data,
-                                                     day=len(data['data'])-1)
+                todays_forecast = grab_forecasts(product, data,
+                                                 day=len(data['data'])-1)
                 # append to the pandas databases
                 todays_forecast_data = todays_forecast_data.append([todays_forecast],
                                                                    ignore_index=True)
@@ -70,7 +70,7 @@ def main():
     return yesterdays_forecast_data, todays_forecast_data
 
 
-def get_iswa_forecasts(product, data, day):
+def grab_forecasts(product, data, day):
     """
     Grab M and X forecasts for particular date
 
