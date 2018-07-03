@@ -67,6 +67,7 @@ def main():
                                                                            ignore_index=True)
     print(yesterdays_forecast_data)
     print(todays_forecast_data)
+    return yesterdays_forecast_data, todays_forecast_data
 
 
 def get_iswa_forecasts(product, data, day):
