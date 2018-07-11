@@ -3,6 +3,7 @@ This will be the main wrapper
 """
 
 import get_iswa_forecasts
+import numpy as np
 
 def main():
     """
