@@ -1,7 +1,7 @@
 """
 This will be the main wrapper
 """
-
+import get_observations
 import get_iswa_forecasts
 import numpy as np
 
@@ -16,7 +16,8 @@ def main():
     # Get weighted ensemble
 
     # Verify yesterdays forecast
-
+    # First get observations
+    obs_list = get_observations()
 
 
 if __name__ == '__main__':

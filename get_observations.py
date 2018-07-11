@@ -12,7 +12,7 @@ anytime ftp://ftp.swpc.noaa.gov/pub/indices/events/20180711events.txt
 import ftplib
 import os
 
-def main(date):
+def main(date='20170905'):
     """
     Get flare events for a particular date
     date should be a string in format 'YYYYMMDD'
@@ -24,9 +24,12 @@ def main(date):
     flare_list = get_list(file)
     print(flare_list)
     if flare_list:
-        print('Yep')
+        mx_list = extract_flares(flare_list)
+        print(mx_list)
+        return mx_list
     else:
         print('Nada')
+        return []
 
 
 def get_list(file):
@@ -49,6 +52,37 @@ def get_list(file):
     return flare_list
 
 
+def extract_flares(flare_list):
+    """
+    split out the text to get the flare magnitudes
+    - only want m and x flares
+    Returns a list like
+    # Start Peak End Magnitude Region
+    """
+    mx_list = []
+    for line in flare_list:
+        split_line = line.split()
+        if '+' in split_line:
+            if 'M' in split_line[9] or 'X' in split_line[9]:
+                if len(split_line) >=15 :
+                    mx = (split_line[2] + ' ' + split_line[3] + ' ' + split_line[4] + ' ' +
+                          split_line[9] + ' ' + split_line[11])
+                    mx_list.append(mx)
+                else:
+                    mx = (split_line[2] + ' ' + split_line[3] + ' ' + split_line[4] + ' ' +
+                          split_line[9] + ' ' + 'NaN')
+                    mx_list.append(mx)
+        else:
+            if 'M' in split_line[8] or 'X' in split_line[8]:
+                if len(split_line) >=14 :
+                    mx = (split_line[1] + ' ' + split_line[2] + ' ' + split_line[3] + ' ' +
+                          split_line[8] + ' ' + split_line[10])
+                    mx_list.append(mx)
+                else:
+                    mx = (split_line[1] + ' ' + split_line[2] + ' ' + split_line[3] + ' ' +
+                          split_line[8] + ' ' + 'NaN')
+                    mx_list.append(mx)
+    return mx_list
 
 if __name__ == '__main__':
     main()
