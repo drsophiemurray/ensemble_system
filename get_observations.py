@@ -1,6 +1,7 @@
 """
 This will grab latest list of flare events.
 Take from code i wrote at met office..
+-- inspired by https://github.com/drsophiemurray/flare_verification/blob/master/get_obs.py
 
 Todays: http://services.swpc.noaa.gov/text/solar-geophysical-event-reports.txt
 or: ftp://ftp.swpc.noaa.gov/pub/indices/events/events.txt
