@@ -12,7 +12,7 @@ anytime ftp://ftp.swpc.noaa.gov/pub/indices/events/20180711events.txt
 import ftplib
 import os
 
-def main(date='20170905'):
+def main(date='20160723'):
     """
     Get flare events for a particular date
     date should be a string in format 'YYYYMMDD'

@@ -74,8 +74,8 @@ def main():
     for product in ISWA_FULLDISK_PRODUCTS:
         #TODO remove hardcoded date when all available and replace with time_start and time_end for realtime
         selection = {"id":product,
-                     "time.min":'2016-09-04T23:50:00.0',
-                     "time.max":'2016-09-06T00:11:00.0',
+                     "time.min":'2016-07-22T23:50:00.0',
+                     "time.max":'2016-07-24T00:11:00.0',
                      "format":"json",
                      "options":"fields.all"}
 #                     "parameters":"start_window,end_window,issue_time,M,X"}
