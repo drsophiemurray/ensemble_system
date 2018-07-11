@@ -9,7 +9,7 @@ anytime ftp://ftp.swpc.noaa.gov/pub/indices/events/20180711events.txt
 """
 
 
-import datetime
+import ftplib
 import os
 
 def main(date):
@@ -17,19 +17,36 @@ def main(date):
     Get flare events for a particular date
     date should be a string in format 'YYYYMMDD'
     """
-    file = date + 'events.txt'
+    if date:
+        file = date + 'events.txt'
+    else:
+        file = 'yesterday.txt'
+    flare_list = get_list(file)
+    print(flare_list)
+    if flare_list:
+        print('Yep')
+    else:
+        print('Nada')
+
+
+def get_list(file):
+    """
+    call ftp, download file, the extract list
+    """
+    #ftp
     ftp = ftplib.FTP('ftp.swpc.noaa.gov')
     ftp.login()
     ftp.cwd('pub/indices/events/')
     ftp.retrbinary('RETR '+file, open(os.getcwd() + '/' + file, "wb").write)
     ftp.close()
-
+    #downloaded file
     flare_list = []
     with open(file, "r") as inp:
         for line in inp:
             if "XRA" in line:
                 flare_list.append(line[0:80])
     os.remove(file)
+    return flare_list
 
 
 
