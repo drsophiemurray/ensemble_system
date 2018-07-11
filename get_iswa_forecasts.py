@@ -128,7 +128,7 @@ def grab_forecasts(product, data, day):
     x_prob = data['data'][day][7]
     # output results
     forecast = {"product":product, "time": forecast_time,
-                "m_prob":m_prob, "x_prob":m_prob}
+                "m_prob":m_prob, "x_prob":x_prob}
     return forecast
 
 if __name__ == '__main__':
