@@ -49,6 +49,7 @@ Note:
 import requests
 import datetime
 import pandas as pd
+import numpy as np
 
 ISWA_FULLDISK_PRODUCTS = {"ASSA_1_FULLDISK", "ASSA_24H_1_FULLDISK",
                           "AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
