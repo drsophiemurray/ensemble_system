@@ -98,8 +98,6 @@ def main():
                                                                    ignore_index=True)
                 yesterdays_forecast_data = yesterdays_forecast_data.append([yesterdays_forecast],
                                                                            ignore_index=True)
-    print(yesterdays_forecast_data)
-    print(todays_forecast_data)
     return yesterdays_forecast_data, todays_forecast_data
 
 
@@ -121,11 +119,11 @@ def grab_forecasts(product, data, day):
     forecast_time = data['data'][day][0]
     # get m plus or m only forecasts
     if any(product == forecast for forecast in M_PLUS_FORECASTS):
-        m_prob = data['data'][day][6]
+        m_prob = np.float(data['data'][day][6])
     else:
-        m_prob = data['data'][day][4]
+        m_prob = np.float(data['data'][day][4])
     # x forecast same for 'plus' or 'only'
-    x_prob = data['data'][day][7]
+    x_prob = np.float(data['data'][day][7])
     # output results
     forecast = {"product":product, "time": forecast_time,
                 "m_prob":m_prob, "x_prob":x_prob}
