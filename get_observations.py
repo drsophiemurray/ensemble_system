@@ -13,23 +13,22 @@ anytime ftp://ftp.swpc.noaa.gov/pub/indices/events/20180711events.txt
 import ftplib
 import os
 
-def main(date='20160723'):
+def main(*date):
     """
     Get flare events for a particular date
     date should be a string in format 'YYYYMMDD'
     """
+
     if date:
-        file = date + 'events.txt'
+        file = date[0] + 'events.txt' #zeroth because reads in as tuple!
     else:
         file = 'yesterday.txt'
     flare_list = get_list(file)
-    print(flare_list)
     if flare_list:
         mx_list = extract_flares(flare_list)
-        print(mx_list)
         return mx_list
     else:
-        print('Nada')
+        print('No events found')
         return []
 
 
