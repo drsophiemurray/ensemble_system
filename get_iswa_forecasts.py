@@ -59,16 +59,20 @@ M_PLUS_FORECASTS = ["AMOS_v1_FULLDISK", "BoM_flare1_FULLDISK",
                     "SIDC_Operator_FULLDISK", "UFCORIN_1_FULLDISK"]
 ISWA_DATA_LINK = "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/flarescoreboard/hapi/data"
 
-def main():
+def main(*date):
     """
     Grabbing the latest forecasts currently available on ISWA and putting them in a pandas database
     For ISWA, values are in 'data' and descriptions are in 'parameters'. No data is '-1'.
     """
-    time_now = datetime.datetime.utcnow()
-    #TODO always take midnight? means dropping SIDC
-    time_start = (time_now-datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f')
-    time_end = time_now.strftime('%Y-%m-%dT%H:%M:%S.%f')
-    # create databases
+    if date:
+        time_start = (date-datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        time_end = date.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    else:
+        time_now = datetime.datetime.utcnow()
+        #TODO always take midnight? means dropping SIDC
+        time_start = (time_now-datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        time_end = time_now.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    # Create databases
     todays_forecast_data = pd.DataFrame(columns = ["product", "time",
                                                    "m_prob", "x_prob"])
     yesterdays_forecast_data = todays_forecast_data.copy()
