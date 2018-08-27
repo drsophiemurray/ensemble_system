@@ -63,6 +63,17 @@ def main(*date):
     """
     Grabbing the latest forecasts currently available on ISWA and putting them in a pandas database
     For ISWA, values are in 'data' and descriptions are in 'parameters'. No data is '-1'.
+
+    Input Parameters
+    ----------------
+    date: datetime object.
+            Will be used as an end time for searching, with start time 24hours previous.
+    Output Parameters
+    -----------------
+    yesterdays_forecast_data: pandas database.
+                                All forecast data obtained 24hours previous.
+    todays_forecast_data: pandas database.
+                                All forecast data on defined date (default currrent or optional specifed)
     """
     if date:
         time_start = (date-datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f')
