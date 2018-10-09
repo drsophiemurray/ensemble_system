@@ -33,9 +33,13 @@ def main():
     # Lets start with reliability and ROC plots :D
 
 
+def roc_plot():
+    """
+    """
 
 def polar_plot():
     """
+    Copied from Aisling Bergin's polar_skills.py
     Create a polar plot with the different skill scores calculated for the different forecasts.
     Individual axes plot the forecasts with higher scores at a larger distance from the centre of the plot.
     The largest enclosed area represents the highest scoring forecast overall.
