@@ -47,6 +47,7 @@ def categorical_metrics():
     :return:
     """
 
+#=======================================================================================================================
 
 
 def polar_plot():
@@ -63,7 +64,8 @@ def polar_plot():
     import datetime as dt
     from shapely import geometry
     # colours for the different areas
-    c = ['tab:blue', 'tab:cyan', 'tab:green', 'tab:olive', 'tab:brown', 'tab:orange',  'tab:red', 'tab:purple',  'tab:pink']
+    c = ['tab:blue', 'tab:cyan', 'tab:green', 'tab:olive',
+         'tab:brown', 'tab:orange',  'tab:red', 'tab:purple',  'tab:pink']
     # open aisling's file
     with open('skill_score.csv', 'r') as f:
         reader = csv.reader(f)
@@ -133,10 +135,13 @@ def polar_plot():
     print(areas)
     plt.show()
 
+#=======================================================================================================================
+
 
 def roc_plot():
     """
     Copied from Aisling Bergin's roc.py
+    Uses following fucntions: contingency_table, POD, FAR, and roc_area
     """
     # stuff that aisling imports
     import csv
@@ -261,7 +266,154 @@ def roc_area(FAR, POD, name):
 
     return poly.area
 
+#=======================================================================================================================
 
 def reliability_plot():
+    """Copied from Aisling Bergin's reliability.py
+    Uses the following functions: binning, sample_climatology, plot_frills
+    Create a reliability plot for the forecasts.
+    Import the data; bin the respective probabilities and for every event aligned with a probability
+    in a bin assign one to the observational frequency corresponding to the bin.
     """
+    import csv, math
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from area import reliability
+    from area import resolution
+    import scipy.special as special
+    # open aisling's file
+    with open('binary_report.csv', 'r') as f:
+        reader = csv.reader(f)
+        report = list(reader)
+    number = [1, 3, 5, 7, 9, 11, 13, 15, 17]
+    name = ['AMOS', 'ASAP', 'ASSA', 'BoM', 'MAG4', 'MOSWOC', 'NOAA', 'SIDC', 'SOLMON']
+    for i in number:
+        inc = 0.15
+    rank_ave, obs, rank, forecasts, events = binning(report, i, perc)
+    no_res, num_events, num_forecasts = sample_climatology(report, i)
+    # set up plot
+    a = plt.axes()
+    # zone of skill, climatology line
+    fig = plot_frills(no_res)
+#    plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
+    # points
+    plt.scatter(rank_ave, obs)#, color='red')
+    # line
+    plt.plot(rank_ave, obs)#, color='red')
+    # title
+    plt.title('Reliability Diagram:' + str(name[number.index(i)]))
+    # histogram
+    a = plt.axes([.25, .65, .2, .2], facecolor='white')
+    width = inc - (inc / 10)
+    plt.bar(rank, forecasts, width, color = 'grey', edgecolor = 'black')
+    plt.ylabel('#forecasts')
+
+def binning(report, i, perc):
     """
+
+    :param report:
+    :param i:
+    :param perc:
+    :return:
+    """
+    thresh, events, forecasts = [[] for x in range(len(perc))], [[] for x in range(len(perc))], [[] for x in range(len(perc))]
+
+    # Find the total number of forecasts in a data set
+    N = []
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))])
+        if np.isfinite(prob):
+            N.append(prob)
+    N = float(len(N))
+
+    # Find the number of forecasts, number of events and number of hits in each threshold for a data set
+
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))])  # probability
+        event = float(report[i + 1][(report[0].index(elem))])  # 1/0 event result
+        if np.isfinite(prob):
+            for category in perc:
+                if prob >= category and prob < perc[perc.index(category) + 1]:
+                    forecasts[perc.index(category)].append(prob)  # append forecasts for each one in bin
+                    if event == 1.0:
+                        events[perc.index(category)].append(elem)  # append events for every '1' in bin
+
+                if category == perc[-1]:
+                    break
+
+    n_k = [float(len(elem)) for elem in forecasts]
+    ranks = [float(np.mean(elem)) for elem in forecasts]
+    events = [float(len(elem)) for elem in events]
+    p_k = perc
+
+    term, o_k, rank_ave = [], [], []
+
+    for elem in perc:
+        if n_k[perc.index(elem)] == 0.:
+            o = 0
+            o_k.append(o)
+            term.append(0)
+        else:
+            o = (events[perc.index(elem)]) / n_k[perc.index(elem)]
+            o_k.append(o)
+            term.append(n_k[perc.index(elem)] * ((elem - o) ** 2))
+        rank_ave.append(ranks[perc.index(elem)])
+
+    rank = perc
+    forecasts = [float(len(elem)) for elem in forecasts]
+
+    return rank_ave, o_k, rank, forecasts, events
+
+
+def sample_climatology(report, i):
+    """
+    counting number events, non events, etc
+    :param report:
+    :param i:
+    :return:
+    """
+    num_forecasts = 0
+    num_events = 0
+
+    for elem in report[0]:
+
+        if np.isfinite(float(report[i][(report[0].index(elem))])):
+            num_forecasts = num_forecasts + 1
+
+        if float(report[i + 1][(report[0].index(elem))]) == 1:
+            num_events = num_events + 1
+
+    no_res = float(num_events) / float(num_forecasts)
+
+    return no_res, num_events, num_forecasts
+
+
+def plot_frills(no_res):
+    """
+
+    :param no_res:
+    :return:
+    """
+    x = np.arange(0, 1.1, 0.1)
+
+    horiz_clim = [no_res for elem in x]
+
+    vert_clim = [no_res for elem in x]
+
+    no_skill = [(elem + no_res) / 2 for elem in x]
+
+    perfect = [elem for elem in x]
+
+    plt.fill_betweenx(x, vert_clim, x, color='lightgrey')
+    plt.fill_between(x, x, no_skill, color='lightgrey')
+
+    plt.plot(x, horiz_clim, linestyle=':', color='grey', linewidth=1.)  ## climatology-horizontal
+    plt.plot(vert_clim, x, linestyle=':', color='grey', linewidth=1.)  # climatology-vertical
+    plt.plot(x, no_skill, linestyle='--', color='grey', linewidth=0.5)  # no skill line
+    plt.plot(x, perfect, color='grey', linewidth=0.5)  # perfect reliability
+
+    plt.axis([0, 1, 0, 1])
+    plt.xlabel('Forecast Probability')
+    plt.ylabel('Observed Frequency')
+
+#=======================================================================================================================
