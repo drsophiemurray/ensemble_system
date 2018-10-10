@@ -173,6 +173,8 @@ def roc_plot():
         plt.title('Relative Operating Characteristic Curve: ' + str(name[number.index(i)]))
 #        plt.savefig('roc_' + str(name[number.index(i)]) + '.png')
         # calculate area
+        area = roc_area(FAR_array, POD_array, str(name[number.index(i)]))
+        areas.append(area)
 
 
 def contingency_table(report, i, thresh):
@@ -225,6 +227,40 @@ def FAR(TP, FN, FP, TN):
     """
     FAR = FP / (FP + TN)
     return FAR
+
+
+def roc_area(FAR, POD, name):
+    """
+
+    :param FAR:
+    :param POD:
+    :param name:
+    :return:
+    """
+    from shapely import geometry
+
+    corners_x, corners_y, corners = [], [], []
+
+    for elem in FAR:
+        x, y = float(elem), float(POD[FAR.index(elem)])
+        corners_x.append(x)  # add point to points in shape
+        corners_y.append(y)
+        corners.append([x, y])
+
+    corners_x.append(0.)  # add 0,0 to shape
+    corners_y.append(0.)
+    corners.append([0., 0.])
+
+    corners_x.append(1.)  # add 1,0 to shape
+    corners_y.append(0.)
+    corners.append([1., 0.])
+
+    poly = geometry.Polygon(corners)
+#    x, y = poly.exterior.xy
+#    plt.plot(x, y)
+
+    return poly.area
+
 
 def reliability_plot():
     """
