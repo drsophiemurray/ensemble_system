@@ -33,9 +33,21 @@ def main():
     # Lets start with reliability and ROC plots :D
 
 
-def roc_plot():
+
+
+def probabilistic_metrics():
     """
+
+    :return:
     """
+
+def categorical_metrics():
+    """
+
+    :return:
+    """
+
+
 
 def polar_plot():
     """
@@ -44,7 +56,7 @@ def polar_plot():
     Individual axes plot the forecasts with higher scores at a larger distance from the centre of the plot.
     The largest enclosed area represents the highest scoring forecast overall.
     """
-    #stuff that aisling imports
+    # stuff that aisling imports
     import csv
     import numpy as np
     import matplotlib.pyplot as plt
@@ -122,5 +134,98 @@ def polar_plot():
     plt.show()
 
 
+def roc_plot():
+    """
+    Copied from Aisling Bergin's roc.py
+    """
+    # stuff that aisling imports
+    import csv
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from area import roc_area
+    # open aisling's file
+    with open('binary_report.csv', 'r') as f:
+        reader = csv.reader(f)
+        report = list(reader)
+    number = [1, 3, 5, 7, 9, 11, 13, 15, 17] #only the probabilities
+    name = ['AMOS', 'ASAP', 'ASSA', 'BoM', 'MAG4', 'MOSWOC', 'NOAA', 'SIDC', 'SOLMON']
+    areas = []
+    for i in number:
+        inc = 0.1 #bins
+        for thresh in list(np.arange(0, 1.1, inc)):
+            TP, FN, FP, TN = contingency_table(report, i, thresh)
+            POD_array.append(POD(TP, FN, FP, TN))
+            FAR_array.append(FAR(TP, FN, FP, TN))
+            total = TP + FN + FP + TN
+        # shaded area
+        plt.fill_between(FAR_array, np.full(len(FAR_array), 0), POD_array, color='lightgrey')
+        # points
+        plt.scatter(FAR_array, POD_array)
+        # line
+        plt.plot(FAR_array, POD_array, label=str(name[number.index(i)]))
+        # range from 0 to 1
+        plt.axis([0, 1, 0, 1])
+        # no skill diagonal
+        plt.plot([0, 1], [0, 1], color='grey', linestyle='--', linewidth=0.7)
+        # titles
+        plt.xlabel('False Alarm Ratio')
+        plt.ylabel('Probability of Detection')
+        plt.title('Relative Operating Characteristic Curve: ' + str(name[number.index(i)]))
+#        plt.savefig('roc_' + str(name[number.index(i)]) + '.png')
+        # calculate area
 
 
+def contingency_table(report, i, thresh):
+    """
+
+    :param report:
+    :param i:
+    :param thresh:
+    :return:
+    """
+    TP, FN, FP, TN = [], [], [], []
+    date, prob, obs = report[0], report[i], report[i + 1]
+    for elem in date:
+        if np.isfinite(float(prob[date.index(elem)])):
+            if float(prob[date.index(elem)]) >= float(thresh):
+                if float(obs[date.index(elem)]) == 1:
+                    TP.append(elem)
+                if float(obs[date.index(elem)]) == 0:
+                    FP.append(elem)
+            else:
+                if float(obs[date.index(elem)]) == 1:
+                    FN.append(elem)
+                if float(obs[date.index(elem)]) == 0:
+                    TN.append(elem)
+    [TP, FN, FP, TN] = [float(len(elem)) for elem in [TP, FN, FP, TN]]
+    return TP, FN, FP, TN
+
+
+def POD(TP, FN, FP, TN):
+    """
+
+    :param TP:
+    :param FN:
+    :param FP:
+    :param TN:
+    :return:
+    """
+    POD = TP / (TP + FN)
+    return POD
+
+
+def FAR(TP, FN, FP, TN):
+    """
+
+    :param TP:
+    :param FN:
+    :param FP:
+    :param TN:
+    :return:
+    """
+    FAR = FP / (FP + TN)
+    return FAR
+
+def reliability_plot():
+    """
+    """
