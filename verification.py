@@ -33,20 +33,6 @@ def main():
     # Lets start with reliability and ROC plots :D
 
 
-
-
-def probabilistic_metrics():
-    """
-
-    :return:
-    """
-
-def categorical_metrics():
-    """
-
-    :return:
-    """
-
 #=======================================================================================================================
 
 
@@ -418,3 +404,150 @@ def plot_frills(no_res):
     plt.ylabel('Observed Frequency')
 
 #=======================================================================================================================
+
+
+def probabilistic_metrics():
+    """
+
+    :return:
+    """
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
+        reader = csv.reader(f)
+        report = list(reader)
+
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/climatology.csv', 'r') as f:
+        reader = csv.reader(f)
+        climatology = list(reader)
+
+    #  Brier score
+    reliability = brier_reliability(report, i, perc)
+    resolution = brier_resolution(report, i, perc)
+    N, events, non_events = forecast_stats(report, i)
+    uncertainty = (float(events) / float(N)) * (1. - (float(events) / float(N)))
+    brier_score = reliability - resolution + uncertainty
+    brier_skill_score = (resolution - reliability) / uncertainty
+
+    # RPSS
+    clim_reliability = brier_reliability(climatology, 1, perc)
+    clim_resolution = brier_resolution(climatology, 1, perc)
+    clim_N, clim_events, clim_non_events = forecast_stats(climatology, 1)
+    clim_uncertainty = (float(clim_events) / float(clim_N)) * (1. - (float(clim_events) / float(clim_N)))
+    clim_brier_score = clim_reliability - clim_resolution + clim_uncertainty
+    RPSS = 1 - (float(brier_score) / float(clim_brier_score))
+
+
+def brier_reliability(report, i, perc):
+    thresh, events, forecasts = [[] for x in range(len(perc))],  [[] for x in range(len(perc))], [[] for x in range(len(perc))]
+    # Find the total number of forecasts in a data set
+    N = []
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))])
+        if np.isfinite(prob):
+            N.append(prob)
+    N = float(len(N))
+    # Find the number of forecasts, number of events and number of hits in each threshold for a data set
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))]) # probability
+        event = float(report[i+1][(report[0].index(elem))]) # 1/0 event result
+        if np.isfinite(prob):
+            for category in perc:
+                if prob >= category and prob < perc[perc.index(category)+1]:
+                    forecasts[perc.index(category)].append(prob)  	# append forecasts for each one in bin
+                    if event == 1.0:
+                        events[perc.index(category)].append(elem)   # append events for every '1' in bin
+                if category == perc[-1]:
+                    break
+    n_k, events, p_k  = [float(len(elem)) for elem in forecasts], [float(len(elem)) for elem in events],  perc
+    term, o_k = [], []
+    for elem in perc:
+        if n_k[perc.index(elem)] == 0.:
+            o = 0
+            o_k.append(o)
+            term.append(0)
+        else:
+            o = (events[perc.index(elem)])/n_k[perc.index(elem)]
+            o_k.append(o)
+            term.append(n_k[perc.index(elem)]*((elem - o)**2))
+    reliability = (1./N)*np.sum(term)
+    return reliability
+
+
+def brier_resolution(report, i, perc):
+    thresh, events, forecasts = [[] for x in range(len(perc))], [[] for x in range(len(perc))], [[] for x in
+                                                                                                 range(len(perc))]
+    # Find the total number of forecasts in a data set
+    N = []
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))])
+        if np.isfinite(prob):
+            N.append(prob)
+    N = float(len(N))
+    # Find the number of forecasts, number of events and number of hits in each threshold for a data set
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))])  # probability
+        event = float(report[i + 1][(report[0].index(elem))])  # 1/0 event result
+        if np.isfinite(prob):
+            for category in perc:
+                if prob >= category and prob < perc[perc.index(category) + 1]:
+                    forecasts[perc.index(category)].append(prob)  # append forecasts for each one in bin
+                    if event == 1.0:
+                        events[perc.index(category)].append(elem)  # append events for every '1' in bin
+                if category == perc[-1]:
+                    break
+
+    n_k, events, p_k = [float(len(elem)) for elem in forecasts], [float(len(elem)) for elem in events], perc
+    climatology = float(np.sum(events)) / float(N)
+    term, o_k = [], []
+    for elem in perc:
+        if n_k[perc.index(elem)] == 0.:
+            o = 0
+            o_k.append(o)
+            term.append(0)
+        else:
+            o = (events[perc.index(elem)]) / n_k[perc.index(elem)]
+            o_k.append(o)
+            term.append(n_k[perc.index(elem)] * ((o - climatology) ** 2))
+    resolution = (1. / N) * np.sum(term)
+    return resolution
+
+
+def forecast_stats(report, i):
+    # Find the total number of forecasts and events in a data set
+    N = []
+    events = []
+    for elem in report[0]:
+        prob = float(report[i][(report[0].index(elem))])
+        event = float(report[i + 1][(report[0].index(elem))])  # 1/0 event result
+
+        if np.isfinite(prob):
+            N.append(prob)
+            if event == 1.0:
+                events.append(elem)  # append events for every '1' in bin
+
+    N = float(len(N))
+    events = float(len(events))
+    return N, events, (N - events)
+
+
+#=======================================================================================================================
+
+def categorical_metrics():
+    """
+
+    :return:
+    """
+    # TSS (H&KSS) and HSS
+    TSS = []
+    HSS = []
+    for thresh in list(np.arange(0, 1.1, inc)):
+        TP, FN, FP, TN = contingency_table(report, i, thresh)
+        if FP == 0:
+            continue
+        this_TSS = ((TP * TN) - (FP * FN)) / ((TP + FN) * (FP + TN))
+        TSS.append(this_TSS)
+        this_HSS = (2 * ((TP * TN) - (FP * FN))) / (((TP + FN) * (FN + TN)) + ((TP + FP) * (FP + TN)))
+        HSS.append(this_HSS)
+    TSS = max([abs(elem) for elem in TSS])
+    HSS = max([abs(elem) for elem in HSS])
+    return TSS, HSS
+
