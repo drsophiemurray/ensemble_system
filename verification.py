@@ -67,7 +67,7 @@ def polar_plot():
     c = ['tab:blue', 'tab:cyan', 'tab:green', 'tab:olive',
          'tab:brown', 'tab:orange',  'tab:red', 'tab:purple',  'tab:pink']
     # open aisling's file
-    with open('skill_score.csv', 'r') as f:
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/skill_score.csv', 'r') as f:
         reader = csv.reader(f)
         report = list(reader)
     # aisling hacked the rows and columns - will have to remove
@@ -141,15 +141,14 @@ def polar_plot():
 def roc_plot():
     """
     Copied from Aisling Bergin's roc.py
-    Uses following fucntions: contingency_table, POD, FAR, and roc_area
+    Uses following functions: contingency_table, POD, FAR, and roc_area
     """
     # stuff that aisling imports
     import csv
     import numpy as np
     import matplotlib.pyplot as plt
-    from area import roc_area
     # open aisling's file
-    with open('binary_report.csv', 'r') as f:
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
         reader = csv.reader(f)
         report = list(reader)
     number = [1, 3, 5, 7, 9, 11, 13, 15, 17] #only the probabilities
@@ -157,6 +156,7 @@ def roc_plot():
     areas = []
     for i in number:
         inc = 0.1 #bins
+        POD_array, FAR_array = [], []
         for thresh in list(np.arange(0, 1.1, inc)):
             TP, FN, FP, TN = contingency_table(report, i, thresh)
             POD_array.append(POD(TP, FN, FP, TN))
@@ -282,31 +282,32 @@ def reliability_plot():
     from area import resolution
     import scipy.special as special
     # open aisling's file
-    with open('binary_report.csv', 'r') as f:
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
         reader = csv.reader(f)
         report = list(reader)
     number = [1, 3, 5, 7, 9, 11, 13, 15, 17]
     name = ['AMOS', 'ASAP', 'ASSA', 'BoM', 'MAG4', 'MOSWOC', 'NOAA', 'SIDC', 'SOLMON']
+    inc = 0.15
+    perc = list(np.arange(0, 1.1, inc))
     for i in number:
-        inc = 0.15
-    rank_ave, obs, rank, forecasts, events = binning(report, i, perc)
-    no_res, num_events, num_forecasts = sample_climatology(report, i)
-    # set up plot
-    a = plt.axes()
-    # zone of skill, climatology line
-    fig = plot_frills(no_res)
-#    plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
-    # points
-    plt.scatter(rank_ave, obs)#, color='red')
-    # line
-    plt.plot(rank_ave, obs)#, color='red')
-    # title
-    plt.title('Reliability Diagram:' + str(name[number.index(i)]))
-    # histogram
-    a = plt.axes([.25, .65, .2, .2], facecolor='white')
-    width = inc - (inc / 10)
-    plt.bar(rank, forecasts, width, color = 'grey', edgecolor = 'black')
-    plt.ylabel('#forecasts')
+        rank_ave, obs, rank, forecasts, events = binning(report, i, perc)
+        no_res, num_events, num_forecasts = sample_climatology(report, i)
+        # set up plot
+        a = plt.axes()
+        # zone of skill, climatology line
+        fig = plot_frills(no_res)
+#        plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
+        # points
+        plt.scatter(rank_ave, obs)#, color='red')
+        # line
+        plt.plot(rank_ave, obs)#, color='red')
+        # title
+        plt.title('Reliability Diagram:' + str(name[number.index(i)]))
+        # histogram
+        a = plt.axes([.25, .65, .2, .2], facecolor='white')
+        width = inc - (inc / 10)
+        plt.bar(rank, forecasts, width, color = 'grey', edgecolor = 'black')
+        plt.ylabel('#forecasts')
 
 def binning(report, i, perc):
     """
