@@ -6,6 +6,7 @@ All in pandas databases.
 import get_observations
 import get_iswa_forecasts
 import numpy as np
+import rolling_climatology
 
 def main():
     """
@@ -32,6 +33,9 @@ def main():
     # Get observations
     obs_list = get_observations.main('20160723')
     print(obs_list)
+
+    # Get 120-day climatology (maybe above get last 120 days?) not sure
+    clim_m, clim_x = rolling_climatology()
 
     # Run through verification
 #    verify(forecasts=iswa_yday, events=obs_list,
