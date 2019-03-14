@@ -5,6 +5,8 @@ Code developed by Aisling Bergin (climatology_120.py), adapted by Sophie Murray 
 
 Code currently assumes has a bunch of NOAA event list files in a folder
 
+She only looks at M flares - fix to inlcude X aswell and output as a pandas DF
+
 """
 
 import os
@@ -13,7 +15,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import csv
 
-path = '/home/aisling/Desktop/Code_Scoreboard/climatology_data'  		# create path to the directory of files
+#path = '/home/aisling/Desktop/Code_Scoreboard/climatology_data'  		# create path to the directory of files
+path = '/Users/somurray/Dropbox/met_office_folders/verification_data/swpc_event_lists/'
 
 def main():
     """
@@ -38,9 +41,10 @@ def main():
 
     print(num)
 
-    table = [date_m[120:], climatology, events]
+    #datetime structure, probability (decimal), yes/no binary did it happen
+    table_m = [date_m[120:], climatology, events]
 
-    return table
+    return table_m
 
 
 def flare_count(path):
@@ -60,9 +64,9 @@ def flare_count(path):
         m_counter = 0
         x_counter = 0
 
-        with open(fullname, 'rb') as inf:
+        with open(fullname, 'r') as inf:
             for i in range(12):
-                inf.next()
+                next(inf)
             reader = csv.reader(inf, delimiter="	")
             for item in reader:
                 if len(item) != 0:
