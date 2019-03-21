@@ -20,7 +20,7 @@ path = '/Users/somurray/Dropbox/met_office_folders/verification_data/swpc_event_
 
 def main():
     """
-
+    outputs datetimes, probability, and yes/no event
 
     """
     num_m, date_m, num_x, date_x, m_class, m_times, x_class, x_times = flare_count(path)
@@ -98,6 +98,7 @@ def flare_count(path):
     date_x, num_x = zip(*sorted(zip(date_x, num_x)))
 
     return num_m, date_m, num_x, date_x, m_class, m_times, x_class, x_times
+
 
 if __name__ == '__main__':
     main()
