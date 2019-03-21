@@ -22,6 +22,7 @@ Other:
 - Mean absolute error
 -"""
 
+import numpy as np
 
 
 def main():
@@ -411,6 +412,7 @@ def probabilistic_metrics():
 
     :return:
     """
+    import csv
     with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
         reader = csv.reader(f)
         report = list(reader)
@@ -419,21 +421,24 @@ def probabilistic_metrics():
         reader = csv.reader(f)
         climatology = list(reader)
 
-    #  Brier score
-    reliability = brier_reliability(report, i, perc)
-    resolution = brier_resolution(report, i, perc)
-    N, events, non_events = forecast_stats(report, i)
-    uncertainty = (float(events) / float(N)) * (1. - (float(events) / float(N)))
-    brier_score = reliability - resolution + uncertainty
-    brier_skill_score = (resolution - reliability) / uncertainty
+    number = [1, 3, 5, 7, 9, 11, 13, 15, 17]
+    perc = list(np.arange(0, 1.1, 0.1))
+    for i in number:
+        #  Brier score
+        reliability = brier_reliability(report, i, perc)
+        resolution = brier_resolution(report, i, perc)
+        total, events, non_events = forecast_stats(report, i)
+        uncertainty = (float(events) / float(total)) * (1. - (float(events) / float(total)))
+        brier_score = reliability - resolution + uncertainty
+        brier_skill_score = (resolution - reliability) / uncertainty
 
-    # RPSS
-    clim_reliability = brier_reliability(climatology, 1, perc)
-    clim_resolution = brier_resolution(climatology, 1, perc)
-    clim_N, clim_events, clim_non_events = forecast_stats(climatology, 1)
-    clim_uncertainty = (float(clim_events) / float(clim_N)) * (1. - (float(clim_events) / float(clim_N)))
-    clim_brier_score = clim_reliability - clim_resolution + clim_uncertainty
-    RPSS = 1 - (float(brier_score) / float(clim_brier_score))
+        # RPSS
+        clim_reliability = brier_reliability(climatology, 1, perc)
+        clim_resolution = brier_resolution(climatology, 1, perc)
+        clim_total, clim_events, clim_non_events = forecast_stats(climatology, 1)
+        clim_uncertainty = (float(clim_events) / float(clim_total)) * (1. - (float(clim_events) / float(clim_total)))
+        clim_brier_score = clim_reliability - clim_resolution + clim_uncertainty
+        RPSS = 1 - (float(brier_score) / float(clim_brier_score))
 
 
 def brier_reliability(report, i, perc):
@@ -510,7 +515,6 @@ def brier_resolution(report, i, perc):
     resolution = (1. / N) * np.sum(term)
     return resolution
 
-
 def forecast_stats(report, i):
     # Find the total number of forecasts and events in a data set
     N = []
@@ -537,17 +541,24 @@ def categorical_metrics():
     :return:
     """
     # TSS (H&KSS) and HSS
-    TSS = []
-    HSS = []
-    for thresh in list(np.arange(0, 1.1, inc)):
-        TP, FN, FP, TN = contingency_table(report, i, thresh)
-        if FP == 0:
-            continue
-        this_TSS = ((TP * TN) - (FP * FN)) / ((TP + FN) * (FP + TN))
-        TSS.append(this_TSS)
-        this_HSS = (2 * ((TP * TN) - (FP * FN))) / (((TP + FN) * (FN + TN)) + ((TP + FP) * (FP + TN)))
-        HSS.append(this_HSS)
-    TSS = max([abs(elem) for elem in TSS])
-    HSS = max([abs(elem) for elem in HSS])
-    return TSS, HSS
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
+        reader = csv.reader(f)
+        report = list(reader)
+    number = [1, 3, 5, 7, 9, 11, 13, 15, 17]
+    perc = list(np.arange(0, 1.1, 0.1))
+
+    for i in number:
+        TSS = []
+        HSS = []
+        for thresh in perc:
+            TP, FN, FP, TN = contingency_table(report, i, thresh)
+            if FP == 0:
+                continue
+            this_TSS = ((TP * TN) - (FP * FN)) / ((TP + FN) * (FP + TN))
+            TSS.append(this_TSS)
+            this_HSS = (2 * ((TP * TN) - (FP * FN))) / (((TP + FN) * (FN + TN)) + ((TP + FP) * (FP + TN)))
+            HSS.append(this_HSS)
+        TSS = max([abs(elem) for elem in TSS])
+        HSS = max([abs(elem) for elem in HSS])
+#    return TSS, HSS
 
