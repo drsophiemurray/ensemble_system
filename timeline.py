@@ -7,18 +7,17 @@ Might come in useful at some point so just archiving as is without fixing up any
 
 import datetime as dt
 import numpy as np
-import os, time, csv, pandas, math, scipy
-from fun_test1 import forecast_results
+import csv, pandas, math, scipy
 import matplotlib.pyplot as plt
-from flare_count import flare_count
+from rolling_climatology import flare_count
 
 from matplotlib import style
 
 style.use('seaborn-whitegrid')
 
 
-def forecasts():
-    with open('binary_report.csv', 'r') as f:
+def forecast_coverage():
+    with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
         reader = csv.reader(f)
         report = list(reader)
 
@@ -47,13 +46,13 @@ def forecasts():
     plt.yticks(y_axis, name)
 
 
-def flares():
+def flare_events():
     # Label the flare count portion of y-axis
     plt.ylabel('Observed Flare Count')
     plt.xlabel('Date')
     # plt.title('NOAA Observed Solar Flare Count')
 
-    path = '/home/aisling/Flare_Scoreboard/flare_data'
+    path = '/Users/somurray/Dropbox/met_office_folders/verification_data/swpc_event_lists/'
 
     num_m, date_m, num_x, date_x, m_class, m_times, x_class, x_times = flare_count(path)
 
