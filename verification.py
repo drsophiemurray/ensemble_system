@@ -147,7 +147,7 @@ def roc_plot_aisling():
         inc = 0.1 #bins
         POD_array, FAR_array = [], []
         for thresh in list(np.arange(0, 1.1, inc)):
-            TP, FN, FP, TN = contingency_table(report, i, thresh)
+            TP, FN, FP, TN = contingency_table_aisling(report, i, thresh)
             POD_array.append(POD(TP, FN, FP, TN))
             FAR_array.append(FAR(TP, FN, FP, TN))
             total = TP + FN + FP + TN
@@ -196,7 +196,7 @@ def contingency_table_aisling(report, i, thresh):
     return TP, FN, FP, TN
 
 
-def roc_plot(date, prob, obs):
+def roc_plot(forecast_time, forecast_probability, observed_yesno):
     """
     Copied from Aisling Bergin's roc.py
     Uses following functions: contingency_table, POD, FAR, and roc_area
@@ -205,7 +205,7 @@ def roc_plot(date, prob, obs):
     inc = 0.1 # bins
     POD_array, FAR_array = [], []
     for thresh in list(np.arange(0, 1.1, inc)):
-        TP, FN, FP, TN = contingency_table(date, prob, obs, thresh)
+        TP, FN, FP, TN = contingency_table(forecast_time, forecast_probability, observed_yesno, thresh)
         POD_array.append(POD(TP, FN, FP, TN))
         FAR_array.append(FAR(TP, FN, FP, TN))
         total = TP + FN + FP + TN
@@ -228,7 +228,7 @@ def roc_plot(date, prob, obs):
     area = roc_area(FAR_array, POD_array)
     return area
 
-def contingency_table(date, prob, obs, thresh):
+def contingency_table(forecast_time, forecast_probability, observed_yesno, thresh):
     """
     :param date: TO BE REMOVED?
     :param prob:
@@ -237,17 +237,17 @@ def contingency_table(date, prob, obs, thresh):
     :return:
     """
     TP, FN, FP, TN = [], [], [], []
-    for elem in date:
-        if np.isfinite(float(prob[date.index(elem)])):
-            if float(prob[date.index(elem)]) >= float(thresh):
-                if float(obs[date.index(elem)]) == 1:
+    for elem in forecast_time:
+        if np.isfinite(float(forecast_probability[forecast_time.index(elem)])):
+            if float(forecast_probability[forecast_time.index(elem)]) >= float(thresh):
+                if float(observed_yesno[forecast_time.index(elem)]) == 1:
                     TP.append(elem)
-                if float(obs[date.index(elem)]) == 0:
+                if float(observed_yesno[forecast_time.index(elem)]) == 0:
                     FP.append(elem)
             else:
-                if float(obs[date.index(elem)]) == 1:
+                if float(observed_yesno[forecast_time.index(elem)]) == 1:
                     FN.append(elem)
-                if float(obs[date.index(elem)]) == 0:
+                if float(observed_yesno[forecast_time.index(elem)]) == 0:
                     TN.append(elem)
     [TP, FN, FP, TN] = [float(len(elem)) for elem in [TP, FN, FP, TN]]
     return TP, FN, FP, TN
@@ -308,7 +308,7 @@ def roc_area(FAR, POD):
 
 #=======================================================================================================================
 
-def reliability_plot():
+def reliability_plot_aisling():
     """Copied from Aisling Bergin's reliability.py
     Uses the following functions: binning, sample_climatology, plot_frills
     Create a reliability plot for the forecasts.
@@ -330,8 +330,8 @@ def reliability_plot():
     inc = 0.15
     perc = list(np.arange(0, 1.1, inc))
     for i in number:
-        rank_ave, obs, rank, forecasts, events = binning(report, i, perc)
-        no_res, num_events, num_forecasts = sample_climatology(report, i)
+        rank_ave, obs, rank, forecasts, events = binning_aisling(report, i, perc)
+        no_res, num_events, num_forecasts = sample_climatology_aisling(report, i)
         # set up plot
         a = plt.axes()
         # zone of skill, climatology line
@@ -349,7 +349,89 @@ def reliability_plot():
         plt.bar(rank, forecasts, width, color = 'grey', edgecolor = 'black')
         plt.ylabel('#forecasts')
 
-def binning(report, i, perc):
+def reliability_plot(forecast_time, forecast_probability, observed_yesno):
+    """Copied from Aisling Bergin's reliability.py
+    Uses the following functions: binning, sample_climatology, plot_frills
+    Create a reliability plot for the forecasts.
+    Import the data; bin the respective probabilities and for every event aligned with a probability
+    in a bin assign one to the observational frequency corresponding to the bin.
+    """
+    inc = 0.15
+    perc = list(np.arange(0, 1.1, inc))
+    rank_ave, obs, rank, forecasts, events = binning(forecast_time, forecast_probability, observed_yesno, perc)
+    no_res, num_events, num_forecasts = sample_climatology(forecast_time, forecast_probability, observed_yesno)
+    # set up plot
+    a = plt.axes()
+    # zone of skill, climatology line
+    fig = plot_frills(no_res)
+#    plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
+    # points
+    plt.scatter(rank_ave, obs)#, color='red')
+    # line
+    plt.plot(rank_ave, obs)#, color='red')
+    # title
+    plt.title('Reliability Diagram')
+    # histogram
+    a = plt.axes([.25, .65, .2, .2], facecolor='white')
+    width = inc - (inc / 10)
+    plt.bar(rank, forecasts, width, color = 'grey', edgecolor = 'black')
+    plt.ylabel('#forecasts')
+
+def binning(forecast_time, forecast_probability, observed_yesno, perc):
+    """
+
+    :param report:
+    :param i:
+    :param perc:
+    :return:
+    """
+
+#    # Find the total number of forecasts in a data set without nans
+#    number_forecasts = []
+#    for i in prob:
+#        if np.isfinite(i):
+#            number_forecasts.append(i)
+#    number_forecasts = float(len(number_forecasts))
+
+    # Find the number of forecasts, number of events and number of hits in each threshold for a data set
+    thresh, events, forecasts = [[] for x in range(len(perc))], [[] for x in range(len(perc))], [[] for x in range(len(perc))]
+
+    for elem in forecast_time:
+        prob = float(forecast_probability[(forecast_time.index(elem))])  # probability
+        event = float(observed_yesno[(forecast_time.index(elem))])  # 1/0 event result
+        if np.isfinite(prob):
+            for category in perc:
+                if prob >= category and prob < perc[perc.index(category) + 1]:
+                    forecasts[perc.index(category)].append(prob)  # append forecasts for each one in bin
+                    if event == 1.0:
+                        events[perc.index(category)].append(elem)  # append events for every '1' in bin
+
+                if category == perc[-1]:
+                    break
+
+    n_k = [float(len(elem)) for elem in forecasts]
+    ranks = [float(np.mean(elem)) for elem in forecasts]
+    events = [float(len(elem)) for elem in events]
+    forecasts = [float(len(elem)) for elem in forecasts]
+
+    term, o_k, rank_ave = [], [], []
+
+    for elem in perc:
+        if n_k[perc.index(elem)] == 0.:
+            o = 0
+            o_k.append(o)
+            term.append(0)
+        else:
+            o = (events[perc.index(elem)]) / n_k[perc.index(elem)]
+            o_k.append(o)
+            term.append(n_k[perc.index(elem)] * ((elem - o) ** 2))
+        rank_ave.append(ranks[perc.index(elem)])
+
+    rank = perc
+
+    return rank_ave, o_k, rank, forecasts, events
+
+def binning_aisling(report, i, perc):
     """
 
     :param report:
@@ -406,7 +488,29 @@ def binning(report, i, perc):
     return rank_ave, o_k, rank, forecasts, events
 
 
-def sample_climatology(report, i):
+def sample_climatology(forecast_time, forecast_probability, observed_yesno):
+    """
+    counting number events, non events, etc
+    :param report:
+    :param i:
+    :return:
+    """
+    num_forecasts = 0
+    num_events = 0
+
+    for elem in forecast_time:
+
+        if np.isfinite(float(forecast_probability[(forecast_time.index(elem))])):
+            num_forecasts = num_forecasts + 1
+
+        if float(observed_yesno[(forecast_time.index(elem))]) == 1:
+            num_events = num_events + 1
+
+    no_res = float(num_events) / float(num_forecasts)
+
+    return no_res, num_events, num_forecasts
+
+def sample_climatology_aisling(report, i):
     """
     counting number events, non events, etc
     :param report:
