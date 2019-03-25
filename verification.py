@@ -23,6 +23,8 @@ Other:
 -"""
 
 import numpy as np
+import csv
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -124,8 +126,7 @@ def polar_plot():
 
 #=======================================================================================================================
 
-
-def roc_plot():
+def roc_plot_aisling():
     """
     Copied from Aisling Bergin's roc.py
     Uses following functions: contingency_table, POD, FAR, and roc_area
@@ -138,6 +139,7 @@ def roc_plot():
     with open('/Users/somurray/Dropbox/tcd/students/ss_astro_projects/scoreboard/Code_Upload/binary_report.csv', 'r') as f:
         reader = csv.reader(f)
         report = list(reader)
+        #I think 0 is the date, then it goes probability, yes/no...
     number = [1, 3, 5, 7, 9, 11, 13, 15, 17] #only the probabilities
     name = ['AMOS', 'ASAP', 'ASSA', 'BoM', 'MAG4', 'MOSWOC', 'NOAA', 'SIDC', 'SOLMON']
     areas = []
@@ -168,8 +170,7 @@ def roc_plot():
         area = roc_area(FAR_array, POD_array, str(name[number.index(i)]))
         areas.append(area)
 
-
-def contingency_table(report, i, thresh):
+def contingency_table_aisling(report, i, thresh):
     """
 
     :param report:
@@ -195,14 +196,69 @@ def contingency_table(report, i, thresh):
     return TP, FN, FP, TN
 
 
+def roc_plot(date, prob, obs):
+    """
+    Copied from Aisling Bergin's roc.py
+    Uses following functions: contingency_table, POD, FAR, and roc_area
+    Dont think it needs date - to be removed
+    """
+    inc = 0.1 # bins
+    POD_array, FAR_array = [], []
+    for thresh in list(np.arange(0, 1.1, inc)):
+        TP, FN, FP, TN = contingency_table(date, prob, obs, thresh)
+        POD_array.append(POD(TP, FN, FP, TN))
+        FAR_array.append(FAR(TP, FN, FP, TN))
+        total = TP + FN + FP + TN
+    # shaded area
+    plt.fill_between(FAR_array, np.full(len(FAR_array), 0), POD_array, color='lightgrey')
+    # points
+    plt.scatter(FAR_array, POD_array)
+    # line
+    plt.plot(FAR_array, POD_array)
+    # range from 0 to 1
+    plt.axis([0, 1, 0, 1])
+    # no skill diagonal
+    plt.plot([0, 1], [0, 1], color='grey', linestyle='--', linewidth=0.7)
+    # titles
+    plt.xlabel('False Alarm Ratio')
+    plt.ylabel('Probability of Detection')
+    plt.title('Relative Operating Characteristic Curve')
+#    plt.savefig('roc_curve.png')
+    # calculate area
+    area = roc_area(FAR_array, POD_array)
+    return area
+
+def contingency_table(date, prob, obs, thresh):
+    """
+    :param date: TO BE REMOVED?
+    :param prob:
+    :param obs:
+    :param thresh:
+    :return:
+    """
+    TP, FN, FP, TN = [], [], [], []
+    for elem in date:
+        if np.isfinite(float(prob[date.index(elem)])):
+            if float(prob[date.index(elem)]) >= float(thresh):
+                if float(obs[date.index(elem)]) == 1:
+                    TP.append(elem)
+                if float(obs[date.index(elem)]) == 0:
+                    FP.append(elem)
+            else:
+                if float(obs[date.index(elem)]) == 1:
+                    FN.append(elem)
+                if float(obs[date.index(elem)]) == 0:
+                    TN.append(elem)
+    [TP, FN, FP, TN] = [float(len(elem)) for elem in [TP, FN, FP, TN]]
+    return TP, FN, FP, TN
+
 def POD(TP, FN, FP, TN):
     """
-
-    :param TP:
-    :param FN:
-    :param FP:
-    :param TN:
-    :return:
+    :param TP: no. of true positives
+    :param FN: no. of false negatives
+    :param FP: no. of false positives
+    :param TN: no. of true negatives
+    :return: probability of detection
     """
     POD = TP / (TP + FN)
     return POD
@@ -210,23 +266,20 @@ def POD(TP, FN, FP, TN):
 
 def FAR(TP, FN, FP, TN):
     """
-
-    :param TP:
-    :param FN:
-    :param FP:
-    :param TN:
-    :return:
+    :param TP: no. of true positives
+    :param FN: no. of false negatives
+    :param FP: no. of false positives
+    :param TN: no. of true negatives
+    :return: false alarm ratio
     """
     FAR = FP / (FP + TN)
     return FAR
 
 
-def roc_area(FAR, POD, name):
+def roc_area(FAR, POD):
     """
-
-    :param FAR:
-    :param POD:
-    :param name:
+    :param FAR: false alarm ratio
+    :param POD: probability of detection
     :return:
     """
     from shapely import geometry
