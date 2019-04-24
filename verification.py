@@ -487,7 +487,6 @@ def binning_aisling(report, i, perc):
 
     return rank_ave, o_k, rank, forecasts, events
 
-
 def sample_climatology(forecast_time, forecast_probability, observed_yesno):
     """
     counting number events, non events, etc
