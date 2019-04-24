@@ -19,7 +19,7 @@ import random
 in_struc = pickle.load( open( "/Users/somurray/Dropbox/Ensemble_ii/software/input_180829.p", "rb" ),encoding='latin1')
 ## ndarrays, e.g., in_struc['MEMBER_0']['M'] -- array([ 0. ,  0.22119922,  0.33634975, ...,  0. ])
 #DEFINE SOME OPTIONS
-metrics = ['brier'] #LIST OF METRICS OR 'ALL'
+metrics = ['brier', 'LCC', 'MAE', 'NLCC_RHO', 'NLCC_TAU', 'REL', ] #LIST OF METRICS OR 'ALL'
 fclass = 'M' # LIST OR 'ALL'
 if fclass == 'M':
     fclass1 = 0
