@@ -29,7 +29,7 @@ if fclass == 'X':
 #
 n = len(in_struc)-1
 eqw = 1./n
-methods = in_struc.keys()[:-1]
+methods = list(in_struc.keys())[:-1]
 option = 'Unconstrained' # Or 'Unconstrained'
 forecasts = [in_struc[j][fclass] for j in methods]
 events = in_struc['EVENTS'][fclass]
@@ -107,11 +107,11 @@ for i in metrics:
 for i in metrics:
     #
     metric = i
-    print metric
+    print(metric)
     grand_average = []
     #
     n_t = len(forecasts[0])
-    indices = range(n_t)    
+    indices = list(range(n_t))
     #
     for rand in range(100):
         #
@@ -172,7 +172,7 @@ for i in metrics:
         w_vals = np.array(w_vals)
         #
         for i,j in zip(w_vals,methods):
-            print j, '%s +/- %s'%(i[0],i[1])#str(round(i[0],3))
+            print((j, '%s +/- %s' % (i[0], i[1])))  # str(round(i[0],3))
             
         #
         grand_average.append(w_vals)
