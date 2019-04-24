@@ -121,8 +121,8 @@ for i in metrics:
         eqw = 1./n
         #
         random.shuffle(indices)
-        t_indices = indices[:n_t/2]
-        v_indices = indices[(n_t/2)+1:]
+        t_indices = indices[:n_t//2]
+        v_indices = indices[(n_t//2)+1:]
         #
         t_forecasts = [forecasts[ii][t_indices] for ii in range(n)] 
         v_forecasts = [forecasts[ii][v_indices] for ii in range(n)]
@@ -176,14 +176,6 @@ for i in metrics:
             
         #
         grand_average.append(w_vals)
-
-
-
-
-
-
-
-
 
    
 #
