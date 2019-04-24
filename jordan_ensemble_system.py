@@ -16,7 +16,7 @@ import pickle
 import random
 #
 #READ INPUT DATA
-in_struc = pickle.load( open( "/Users/somurray/Dropbox/Ensemble_ii/software/input_180829.p", "r" ) )
+in_struc = pickle.load( open( "/Users/somurray/Dropbox/Ensemble_ii/software/input_180829.p", "rb" ),encoding='latin1')
 ## ndarrays, e.g., in_struc['MEMBER_0']['M'] -- array([ 0. ,  0.22119922,  0.33634975, ...,  0. ])
 #DEFINE SOME OPTIONS
 metrics = ['brier'] #LIST OF METRICS OR 'ALL'
