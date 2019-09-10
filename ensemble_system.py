@@ -24,7 +24,7 @@ def main():
     average_iswa_today_x = np.average(iswa_today['x_prob'])
 
     # Get weighted ensemble
-#    ensemble_out = ensemble(iswa_today,
+#    ensemble_out = ensemble_model(iswa_today,
 #                            type='probabilistic',
 #                            metric='brier',
 #                            uncertainty=True)
