@@ -1,23 +1,28 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sun Sep 25 20:32:01 2016
+Ensemble code used for 2020 paper
 
-@author: jguerraa
+Originally created by Jordan Guerra
+
+Tidied up and tested by Sophie Murray
+
 """
 
 import numpy as np
 from scipy.optimize import minimize
-import dateutil
-from matplotlib import pyplot as plt
-import matplotlib.dates as mdates
+#import dateutil
+#from matplotlib import pyplot as plt
+#import matplotlib.dates as mdates
 from scipy.stats import spearmanr
 from scipy.stats import kendalltau
 import pickle
 import random
 #
 #READ INPUT DATA
-in_struc = pickle.load( open( "/Users/somurray/Dropbox/Ensemble_ii/software/input_180829.p", "rb" ),encoding='latin1')
-## ndarrays, e.g., in_struc['MEMBER_0']['M'] -- array([ 0. ,  0.22119922,  0.33634975, ...,  0. ])
+in_struc = pickle.load( open( "/Users/sophie/Dropbox/Ensemble_ii/software/input_180829.p", "rb" ),encoding='latin1')
+## dictionary of ndarrays, e.g.,
+## 'MEMBER_0'...'MEMBER_5' : 'M': array and 'X': array
+## 'EVENTS': {'M': array([ 1.,  1.,  1., ...,  0.,  0.,  0.]), 'X': array([ 0.,  0.,  0., ...,  0.,  0.,  0.])}
+## size 1096
 #DEFINE SOME OPTIONS
 metrics = ['brier', 'LCC', 'MAE', 'NLCC_RHO', 'NLCC_TAU', 'REL', ] #LIST OF METRICS OR 'ALL'
 fclass = 'M' # LIST OR 'ALL'
@@ -27,15 +32,15 @@ if fclass == 'X':
     fclass1 = 1
 
 #
-n = len(in_struc)-1
-eqw = 1./n
-methods = list(in_struc.keys())[:-1]
-option = 'Unconstrained' # Or 'Unconstrained'
-forecasts = [in_struc[j][fclass] for j in methods]
-events = in_struc['EVENTS'][fclass]
+n = len(in_struc)-1  ##no. forecasts, so in this case its 6 (minus the events)
+eqw = 1./n ### equal weight
+methods = list(in_struc.keys())[:-1] ## he got rid of the events
+option = 'Unconstrained' ## presumably otherwise constrained
+forecasts = [in_struc[j][fclass] for j in methods]  ##taking out M class only - 6 different arrays of 1096 probabilities
+events = in_struc['EVENTS'][fclass] ##associated events for chosen forecasts
 #
 #ws_ini = np.array([0.0 for i in range(n)])
-   
+
 #DEFINITION OF METRICS
 def metric_funct(metric,t,e):
     global funct
@@ -54,7 +59,7 @@ def metric_funct(metric,t,e):
     # NLCC_TAU
     if metric == 'NLCC_TAU':
         funct = kendalltau(t, e)[0]
-    
+
     # REL
     if metric == 'REL':
         n1 = 10
@@ -77,14 +82,15 @@ def metric_funct(metric,t,e):
         rel_vec = [nn*((pp-ee)**2.0) for nn,pp,ee in zip(numvec,pvec,evec)]
         funct = np.nansum(rel_vec)/len(t)
     return funct
-    
+
+##dont
 def optimize_funct(ws):
     global ofunct
     combination = sum([ws[i]*t_forecasts[i] for i in range(n)])
     ofunct = metric_funct(metric,combination,t_events)#np.mean((combination - events)**2.0)
     if metric == 'LCC':
         ofunct = -1*ofunct
-    #    
+    #
     return ofunct
 
 """
@@ -104,58 +110,66 @@ for i in metrics:
 #dd.append(-1.0)
 #const_deriv = np.array(sum(dd))
 # Bound weights to positive values
+
+import time
+start_time = time.time()
+
+
 for i in metrics:
     #
     metric = i
     print(metric)
     grand_average = []
     #
-    n_t = len(forecasts[0])
+    n_t = len(forecasts[0])  # no. of forecasts
     indices = list(range(n_t))
     #
     for rand in range(100):
         #
         # RANDOMLY SPLIT THE SAMPLE
         #
-        n = len(in_struc)-1
-        eqw = 1./n
+        n = len(in_struc) - 1  ##same as above!
+        eqw = 1. / n  ##same as above!
         #
-        random.shuffle(indices)
-        t_indices = indices[:n_t//2]
-        v_indices = indices[(n_t//2)+1:]
+        random.shuffle(indices)  # self explanatory - shuffle numbers from 0 to 1095
+        t_indices = indices[:n_t // 2]  ##half the size of indices, 548
+        v_indices = indices[(n_t // 2) + 1:]  ##547?! i think he's randomly split the set basically in half
         #
-        t_forecasts = [forecasts[ii][t_indices] for ii in range(n)] 
+        t_forecasts = [forecasts[ii][t_indices] for ii in range(n)]  # this has the 6 different forecasts in it
         v_forecasts = [forecasts[ii][v_indices] for ii in range(n)]
         t_events = events[t_indices]
         v_events = events[v_indices]
         #
         if option == 'Unconstrained':
-            ebar  = np.mean(t_events)
-            temp = [ebar for i in range(len(t_events))]
+            ebar = np.mean(t_events)  ## creating a climatology based on the mean of the dataset
+            temp = [ebar for i in range(len(t_events))]  ##size 548
             t_forecasts.append(np.array(temp))
             methods.append('Climatology')
-            n += 1 
-            eqw = 1./n        
-        #        
-        dws = np.array([1.0 for ii in range(n)])
+            n += 1  ## now 7 forecasts not 6 to include climatology
+            eqw = 1. / n
+            #
+        dws = np.array([1.0 for ii in range(n)])  # 7 elements in an array
         #
         weights = []
+        ##dont seem to use j??
         for j in range(500):
 
-            ws_ini = np.array([random.uniform(0.,1.) for i in range(n)])
-            bnds = tuple((0.0,1.0) for ws in ws_ini)
+            ws_ini = np.array([random.uniform(0., 1.) for i in range(n)])
+            bnds = tuple((0.0, 1.0) for ws in ws_ini)
             if option == 'Unconstrained':
-                ws_ini = np.array([random.uniform(-1.,1.) for i in range(n)])
-                bnds = tuple((-1.,1.) for ws in ws_ini) 
-            #
-            cons = ({'type': 'eq', 'fun' : lambda ws: np.array(sum([ws[ii] for ii in range(n)])-1.0), 'jac' : lambda ws: dws})
-        
-            res = minimize(optimize_funct, ws_ini, constraints=cons, bounds=bnds, method='SLSQP', jac=False, options={'disp': False,'maxiter': 10000, 'eps': 0.001})
-        
-            weights.append( [ii for ii in res.x] )
-        
+                ws_ini = np.array([random.uniform(-1., 1.) for i in range(n)])  ###so basically dont do the above
+                bnds = tuple((-1., 1.) for ws in ws_ini)
+                #
+            cons = (
+            {'type': 'eq', 'fun': lambda ws: np.array(sum([ws[ii] for ii in range(n)]) - 1.0), 'jac': lambda ws: dws})
+
+            res = minimize(optimize_funct, ws_ini, constraints=cons, bounds=bnds, method='SLSQP', jac=False,
+                           options={'disp': False, 'maxiter': 10000, 'eps': 0.001})
+
+            weights.append([ii for ii in res.x])
+
         weights = np.array(weights)
-        #plt.figure()
+        # plt.figure()
         """
         nplot = int(round(np.sqrt(n)))
         f, ax = plt.subplots(nplot,nplot)
@@ -168,20 +182,21 @@ for i in metrics:
             except:
                 continue
         """
-        w_vals = [ [np.mean(weights[:,i]),np.std(weights[:,i])] for i in range(n) ]
+        w_vals = [[np.mean(weights[:, i]), np.std(weights[:, i])] for i in range(n)]
         w_vals = np.array(w_vals)
         #
-        for i,j in zip(w_vals,methods):
-            print((j, '%s +/- %s' % (i[0], i[1])))  # str(round(i[0],3))
-            
+        # for i, j in zip(w_vals, methods):
+        #     print((j, '%s +/- %s' % (i[0], i[1])))  # str(round(i[0],3))
+
         #
         grand_average.append(w_vals)
-
-   
+    print("--- %s seconds ---" % (time.time() - start_time))
+clim_p = np.array([np.mean(events) for i in range(len(events))])
+comb_p = res.x[0]*forecasts[0] + res.x[1]*forecasts[1] + res.x[2]*forecasts[2] + res.x[3]*forecasts[3] + res.x[4]*forecasts[4] + res.x[5]*forecasts[5] + res.x[6]*(clim_p)
 #
 #for i,j in zip(res.x,methods):
 #    print j,str(round(i,3))
-#print res.x[0] + res.x[1] + res.x[2] + res.x[3] + res.x[4] + res.x[5] 
+#print res.x[0] + res.x[1] + res.x[2] + res.x[3] + res.x[4] + res.x[5]
 """
 comb_p = res.x[0]*p0 + res.x[1]*p1 + res.x[2]*p2 + res.x[3]*p3 + res.x[4]*p4 + res.x[5]*p5 + res.x[6]*np.mean(e)
 
