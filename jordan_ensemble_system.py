@@ -1,9 +1,8 @@
 """
-Ensemble code used for 2020 paper
+Ensemble code used for the paper, 'Modeling Ensemble Forecasting of Major Solar Flares',
+under review Journal Space Weather Space Climate (2020).
 
-Originally created by Jordan Guerra
-
-Tidied up and tested by Sophie Murray
+Originally created by Jordan Guerra, and tidied up and tested by Sophie Murray.
 
 """
 
@@ -19,14 +18,33 @@ metric = 'brier'
 fclass = 'M'
 mean = True
 unconstrained = True
-split == False
+split = False
+data_source = "/Users/sophie/Dropbox/Ensemble_ii/software/input_180829.p"
 
-def create_ensemble():
-    #Load input data
-    input_forecasts = load_data("/Users/sophie/Dropbox/Ensemble_ii/software/input_180829.p")
+def main():
+    """
+    Load forecasts and flare event information for multiple methods,
+    and create an ensemble based on whatever chosen defined metric.
+
+    Options above include
+    - choice of metric,
+    - what flare class data to choose from (in this data set M or X),
+    - include a mean climatology or not,
+    - create a constrained or unconstrained ensemble,
+    - split the dataset to provide validation data or not
+
+    Code outputs the resulting ensemble probability
+    (and maybe that validation data set if Jordan confirms that's what it actually is!)
+    """
+    # Load input data
+    input_forecasts = load_data(data_source)
+    methods = list(input_forecasts.keys())[:-1]
+
     # Split the forecasts from the events
-    forecasts = [input_forecasts[j][fclass] for j in list(input_forecasts.keys())[:-1]]  # taking out M class only
-    events = input_forecasts['EVENTS'][fclass]  # associated events for chosen forecasts
+    # First take out whatever the chosen flare class is
+    forecasts = [input_forecasts[j][fclass] for j in list(input_forecasts.keys())[:-1]]
+    # Then grab associated events for chosen forecasts
+    events = input_forecasts['EVENTS'][fclass]
 
     # Get mean of all events and add to members if requested
     if mean == True:
@@ -34,17 +52,21 @@ def create_ensemble():
         forecasts.append(np.array([ebar for i in range(len(events))]))
         methods.append('Climatology')
 
+    # Create ensemble
+    ensemble_probability = create_ensemble(forecasts, events)
+
+def create_ensemble(forecasts, events):
     # Get no. of forecasts in ensemble (minus the events)
     no_members = len(forecasts)
     no_forecasts = len(forecasts[0])
     forecast_indices = list(range(no_forecasts))
 
-    # If you want to randomly split sample
+    # If you want to randomly split sample, shuffle the indices then split in half
     if split == True:
-        random.shuffle(forecast_indices)  # shuffle numbers from 0 to 1095
-        t_indices = forecast_indices[:no_forecasts // 2]  ## half the size of indices, 548
-        v_indices = forecast_indices[(no_forecasts // 2) + 1:]  ## i think he's randomly split the set basically in half
-        t_forecasts = [forecasts[ii][t_indices] for ii in range(no_members)]  # has the 6 different forecasts in it
+        random.shuffle(forecast_indices)
+        t_indices = forecast_indices[:no_forecasts // 2]
+        v_indices = forecast_indices[(no_forecasts // 2) + 1:]
+        t_forecasts = [forecasts[ii][t_indices] for ii in range(no_members)]
         v_forecasts = [forecasts[ii][v_indices] for ii in range(no_members)]
         t_events = events[t_indices]
         v_events = events[v_indices]
@@ -77,13 +99,10 @@ def create_ensemble():
                    options={'disp': False, 'maxiter': 10000, 'eps': 0.001})
 
     # Get ensemble probability using calculated weights
-    comb_p = res.x[0]*forecasts[0] + \
-             res.x[1]*forecasts[1] + \
-             res.x[2]*forecasts[2] + \
-             res.x[3]*forecasts[3] + \
-             res.x[4]*forecasts[4] + \
-             res.x[5]*forecasts[5] + \
-             res.x[6]*forecasts[6]
+    # First mulitply the weights out, then sum them together
+    combined_probability = sum([(res.x[i]*forecasts[i]) for i in list(range(no_members))])
+
+    return combined_probability
 
 def load_data(file):
     """
@@ -151,3 +170,7 @@ def optimize_funct(ws):
     if metric == 'LCC':
         ofunct = -1*ofunct
     return ofunct
+
+
+if __name__ == '__main__':
+    main()
