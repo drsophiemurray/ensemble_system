@@ -21,6 +21,7 @@ unconstrained = True
 split = False
 data_source = "/Users/sophie/Dropbox/Ensemble_ii/software/input_180829.p"
 
+
 def main():
     """
     Load forecasts and flare event information for multiple methods,
@@ -54,6 +55,7 @@ def main():
 
     # Create ensemble
     ensemble_probability = create_ensemble(forecasts, events)
+
 
 def create_ensemble(forecasts, events):
     # Get no. of forecasts in ensemble (minus the events)
@@ -100,9 +102,10 @@ def create_ensemble(forecasts, events):
 
     # Get ensemble probability using calculated weights
     # First mulitply the weights out, then sum them together
-    combined_probability = sum([(res.x[i]*forecasts[i]) for i in list(range(no_members))])
+    combined_probability = sum([(res.x[i] * forecasts[i]) for i in list(range(no_members))])
 
     return combined_probability
+
 
 def load_data(file):
     """
@@ -111,7 +114,8 @@ def load_data(file):
     - 'MEMBER_0'...'MEMBER_5' : 'M': array and 'X': array
     - 'EVENTS': {'M': array([ 1.,  1.,  1., ...,  0.,  0.,  0.]), 'X': array([ 0.,  0.,  0., ...,  0.,  0.,  0.])}
     """
-    return pickle.load(open(file, "rb" ), encoding='latin1')
+    return pickle.load(open(file, "rb"), encoding='latin1')
+
 
 def metric_funct(metric, t, e):
     """
@@ -127,10 +131,10 @@ def metric_funct(metric, t, e):
     global funct
     # BRIER
     if metric == 'brier':
-        funct = np.mean((t - e)**2.0)
+        funct = np.mean((t - e) ** 2.0)
     # LCC
     if metric == 'LCC':
-        funct = np.corrcoef(t, e)[0,1]
+        funct = np.corrcoef(t, e)[0, 1]
     # MAE
     if metric == 'MAE':
         funct = np.mean(np.abs(t - e))
@@ -143,32 +147,33 @@ def metric_funct(metric, t, e):
     # REL
     if metric == 'REL':
         n1 = 10
-        delta = 1./float(n1)
-        pgrid = (np.arange(n1)*delta)
+        delta = 1. / float(n1)
+        pgrid = (np.arange(n1) * delta)
         pvec = []
         evec = []
         numvec = []
-        for i0 in range(n1-1):
-            if i0+1 > n1-1:
+        for i0 in range(n1 - 1):
+            if i0 + 1 > n1 - 1:
                 m = np.where(t >= pgrid[i0])
             else:
-                m = np.where(np.logical_and(t >= pgrid[i0],t < pgrid[i0+1]))
+                m = np.where(np.logical_and(t >= pgrid[i0], t < pgrid[i0 + 1]))
             pvec.append(np.mean(t[m[0]]))
             evec.append(np.mean(e[m[0]]))
             numvec.append(len(m[0]))
-        rel_vec = [nn*((pp-ee)**2.0) for nn,pp,ee in zip(numvec,pvec,evec)]
-        funct = np.nansum(rel_vec)/len(t)
+        rel_vec = [nn * ((pp - ee) ** 2.0) for nn, pp, ee in zip(numvec, pvec, evec)]
+        funct = np.nansum(rel_vec) / len(t)
     return funct
+
 
 def optimize_funct(ws):
     """
     Optimzation procedure
     """
     global ofunct
-    combination = sum([ws[i]*t_forecasts[i] for i in range(no_members)])
+    combination = sum([ws[i] * t_forecasts[i] for i in range(no_members)])
     ofunct = metric_funct(metric, combination, t_events)
     if metric == 'LCC':
-        ofunct = -1*ofunct
+        ofunct = -1 * ofunct
     return ofunct
 
 
