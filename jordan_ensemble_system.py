@@ -6,20 +6,20 @@ Originally created by Jordan Guerra, and tidied up and tested by Sophie Murray.
 
 """
 
+import pickle
+import random
 import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import spearmanr
 from scipy.stats import kendalltau
-import pickle
-import random
 
 # Define some options
-metric = 'brier'
-fclass = 'M'
-mean = True
-unconstrained = True
-split = False
-data_source = "/Users/sophie/Dropbox/Ensemble_ii/software/input_180829.p"
+METRIC = 'brier'
+FLARE_CLASS = 'M'
+MEAN_CLIMATOLOGY = True
+UNCONSTRAINED = True
+SPLIT_DATASET = False
+DATA_SOURCE = "/Users/sophie/Dropbox/Ensemble_ii/software/input_180829.p"
 
 
 def main():
@@ -38,17 +38,17 @@ def main():
     (and maybe that validation data set if Jordan confirms that's what it actually is!)
     """
     # Load input data
-    input_forecasts = load_data(data_source)
+    input_forecasts = load_data(DATA_SOURCE)
     methods = list(input_forecasts.keys())[:-1]
 
     # Split the forecasts from the events
     # First take out whatever the chosen flare class is
-    forecasts = [input_forecasts[j][fclass] for j in list(input_forecasts.keys())[:-1]]
+    forecasts = [input_forecasts[j][FLARE_CLASS] for j in list(input_forecasts.keys())[:-1]]
     # Then grab associated events for chosen forecasts
-    events = input_forecasts['EVENTS'][fclass]
+    events = input_forecasts['EVENTS'][FLARE_CLASS]
 
     # Get mean of all events and add to members if requested
-    if mean == True:
+    if MEAN_CLIMATOLOGY is True:
         ebar = np.mean(events)
         forecasts.append(np.array([ebar for i in range(len(events))]))
         methods.append('Climatology')
@@ -56,15 +56,20 @@ def main():
     # Create ensemble
     ensemble_probability = create_ensemble(forecasts, events)
 
+    return ensemble_probability
+
 
 def create_ensemble(forecasts, events):
+    """
+    Create the ensemble by getting the weights via optimization?
+    """
     # Get no. of forecasts in ensemble (minus the events)
     no_members = len(forecasts)
     no_forecasts = len(forecasts[0])
     forecast_indices = list(range(no_forecasts))
 
     # If you want to randomly split sample, shuffle the indices then split in half
-    if split == True:
+    if SPLIT_DATASET is True:
         random.shuffle(forecast_indices)
         t_indices = forecast_indices[:no_forecasts // 2]
         v_indices = forecast_indices[(no_forecasts // 2) + 1:]
@@ -77,7 +82,7 @@ def create_ensemble(forecasts, events):
         t_events = events
 
     # Expand bounds if unconstrained is set
-    if unconstrained == True:
+    if UNCONSTRAINED is True:
         ws_ini = np.array([random.uniform(-1., 1.) for i in range(no_members)])
         bounds = tuple((-1., 1.) for ws in ws_ini)
     else:
@@ -112,7 +117,8 @@ def load_data(file):
     Read pickle dump created for analysis
     'file' contains a dictionary of ndarrays (of size 1096):
     - 'MEMBER_0'...'MEMBER_5' : 'M': array and 'X': array
-    - 'EVENTS': {'M': array([ 1.,  1.,  1., ...,  0.,  0.,  0.]), 'X': array([ 0.,  0.,  0., ...,  0.,  0.,  0.])}
+    - 'EVENTS': {'M': array([ 1.,  1.,  1., ...,  0.,  0.,  0.]),
+                 'X': array([ 0.,  0.,  0., ...,  0.,  0.,  0.])}
     """
     return pickle.load(open(file, "rb"), encoding='latin1')
 
@@ -171,8 +177,8 @@ def optimize_funct(ws):
     """
     global ofunct
     combination = sum([ws[i] * t_forecasts[i] for i in range(no_members)])
-    ofunct = metric_funct(metric, combination, t_events)
-    if metric == 'LCC':
+    ofunct = metric_funct(METRIC, combination, t_events)
+    if METRIC == 'LCC':
         ofunct = -1 * ofunct
     return ofunct
 
