@@ -91,7 +91,6 @@ def create_ensemble(forecasts, events):
 
     # Set up arrays for weights
     dws = np.array([1.0 for ii in range(no_members)])  # 7 elements in an array
-    weights = []
 
     # Calculate weights
     constraints = ({'type': 'eq',
@@ -123,7 +122,7 @@ def load_data(file):
     return pickle.load(open(file, "rb"), encoding='latin1')
 
 
-def metric_funct(metric, t, e):
+def metric_funct(metric, forecast, event):
     """
     Define the metrics to be used to create the ensemble
     Options are
@@ -137,46 +136,46 @@ def metric_funct(metric, t, e):
     global funct
     # BRIER
     if metric == 'brier':
-        funct = np.mean((t - e) ** 2.0)
+        funct = np.mean((forecast - event) ** 2.0)
     # LCC
     if metric == 'LCC':
-        funct = np.corrcoef(t, e)[0, 1]
+        funct = np.corrcoef(forecast, event)[0, 1]
     # MAE
     if metric == 'MAE':
-        funct = np.mean(np.abs(t - e))
+        funct = np.mean(np.abs(forecast - event))
     # NLCC_RHO
     if metric == 'NLCC_RHO':
-        funct = spearmanr(t, e)[0]
+        funct = spearmanr(forecast, event)[0]
     # NLCC_TAU
     if metric == 'NLCC_TAU':
-        funct = kendalltau(t, e)[0]
+        funct = kendalltau(forecast, event)[0]
     # REL
     if metric == 'REL':
-        n1 = 10
-        delta = 1. / float(n1)
-        pgrid = (np.arange(n1) * delta)
+        number = 10
+        delta = 1. / float(number)
+        pgrid = (np.arange(number) * delta)
         pvec = []
         evec = []
         numvec = []
-        for i0 in range(n1 - 1):
-            if i0 + 1 > n1 - 1:
-                m = np.where(t >= pgrid[i0])
+        for i in range(number - 1):
+            if i + 1 > number - 1:
+                m = np.where(forecast >= pgrid[i])
             else:
-                m = np.where(np.logical_and(t >= pgrid[i0], t < pgrid[i0 + 1]))
-            pvec.append(np.mean(t[m[0]]))
-            evec.append(np.mean(e[m[0]]))
+                m = np.where(np.logical_and(forecast >= pgrid[i], forecast < pgrid[i + 1]))
+            pvec.append(np.mean(forecast[m[0]]))
+            evec.append(np.mean(event[m[0]]))
             numvec.append(len(m[0]))
         rel_vec = [nn * ((pp - ee) ** 2.0) for nn, pp, ee in zip(numvec, pvec, evec)]
-        funct = np.nansum(rel_vec) / len(t)
+        funct = np.nansum(rel_vec) / len(forecast)
     return funct
 
 
-def optimize_funct(ws):
+def optimize_funct(ws_ini):
     """
     Optimzation procedure
     """
     global ofunct
-    combination = sum([ws[i] * t_forecasts[i] for i in range(no_members)])
+    combination = sum([ws_ini[i] * t_forecasts[i] for i in range(no_members)])
     ofunct = metric_funct(METRIC, combination, t_events)
     if METRIC == 'LCC':
         ofunct = -1 * ofunct
